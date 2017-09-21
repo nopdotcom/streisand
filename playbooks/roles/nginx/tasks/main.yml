@@ -5,19 +5,19 @@
     state: absent
   with_items: "{{ apache_packages_to_remove }}"
 
-- name: Add the official Nginx APT key
-  apt_key:
-    id: 7BD9BF62
-    data: "{{ item }}"
-  with_file: nginx_signing.key
+# - name: Add the official Nginx APT key
+#   apt_key:
+#     id: 7BD9BF62
+#     data: "{{ item }}"
+#   with_file: nginx_signing.key
 
-- name: Add the official Nginx repository
-  apt_repository:
-    repo: "deb https://nginx.org/packages/{{ ansible_distribution|lower }}/ {{ ansible_lsb.codename }} nginx"
+# - name: Add the official Nginx repository
+#   apt_repository:
+#     repo: "deb https://nginx.org/packages/{{ ansible_distribution|lower }}/ {{ ansible_lsb.codename }} nginx"
 
-- name: Install Nginx
-  apt:
-    name: nginx
+# - name: Install Nginx
+#   apt:
+#     name: nginx
 
 - name: Update Nginx configuration
   copy:
