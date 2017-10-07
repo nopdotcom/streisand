@@ -50,21 +50,22 @@ function check_python() {
 # check_ssh_key checks that there is a `~/.ssh/id_rsa.pub` file present.
 # Streisand requires this key be present.
 function check_ssh_key() {
-  set -x
   local STREISAND_SSH_KEY="$HOME/.ssh/id_rsa.pub"
 
-  # horrible hack
-  if [ ! -f "$STREISAND_SSH_KEY" -a -f "./sshkeys/id_rsa.pub" ]
+  # In case we're sharing SSH keys inside Docker
+  if [ ! -z "$STREISAND_SSH_KEY_FROM_HOST" ]
   then
-      # In this scenario, there's no agent running inside the container.
-      mkdir -p ~/.ssh
-      chmod 700 ~/.ssh
-      cp ./sshkeys/id_rsa.pub ./sshkeys/id_rsa ~/.ssh/
-      chmod 600 ~/.ssh/id_rsa
-      chmod 644 ~/.ssh/id_rsa.pub
+      STREISAND_SSH_KEY="$STREISAND_SSH_KEY_FROM_HOST"
   fi
-  # end hack
-  
+  # If we're using an id_rsa with a password, let's get it now.
+  # This depends on being inside a ssh-agent session.
+  if [ ! -z "$STREISAND_SSH_ADD_KEY" ]
+  then
+      local privkey="${STREISAND_SSH_KEY_FROM_HOST%.pub}"
+      echo "Adding $privkey"
+      ssh-add "$privkey"
+  fi
+
   if [ ! -f "$STREISAND_SSH_KEY" ]
   then
     echo "
@@ -72,7 +73,6 @@ Streisand requires a RSA SSH key be present at '$HOME/.ssh/id_rsa.pub'.
 Please create this keypair by running 'ssh-keygen'"
     exit 1
   fi
-  set +x
 }
 
 # validate runs the validation role to check the consistency of the Streisand
@@ -198,7 +198,6 @@ EOF
 init_homedir
 check_python
 check_ansible
-set -x
 check_ssh_key
 
 # Figure out which genesis role to invoke

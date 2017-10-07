@@ -15,7 +15,6 @@ RUN pip install ansible
 
 # pipping
 RUN pip install boto boto3 msrest msrestazure azure==2.0.0rc5 packaging dopy==0.3.5 "apache-libcloud>=1.5.0" linode-python pyrax
-RUN pip install ansible
 
 RUN mkdir /work
 RUN mkdir /work/streisand
@@ -27,3 +26,4 @@ CMD ["/work/streisand/streisand"]
 
 # ENTRYPOINT ["bash"]
 # ENTRYPOINT ["sleep 86400"]
+ENTRYPOINT ["ssh-agent"]
