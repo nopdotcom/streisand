@@ -70,6 +70,7 @@ Streisand requires a RSA SSH key be present at '$HOME/.ssh/id_rsa.pub'.
 Please create this keypair by running 'ssh-keygen'"
     exit 1
   fi
+}
 
 # validate runs the validation role to check the consistency of the Streisand
 # service vars (e.g. that at least one service is enabled after customization of
@@ -115,7 +116,7 @@ Please enter the word 'yes' or hit enter to continue: " confirm
            playbooks/customize.yml;;
     *) echo; echo "Installing Streisand services specified in $SITE_VARS";;
   esac
-k}
+}
 
 # run_genesis invokes the genesis playbook file specified by the first argument
 # to the function, or `streisand.yml` if none is provided. It uses the second
