@@ -34,7 +34,9 @@ This script can install virtualenv for you, but on Linux, this
 requires sudo/root access.
 
 'new-directory' must be somewhere you can write to. A good place may be
-$HOME/streisand-deps. 
+$HOME/streisand-deps. If it already exists,
+please delete the directory, or use a different name.
+
 "
 }
 
@@ -58,11 +60,32 @@ if [ "$#" -ne 1 ]; then
    invocation_problems=1
 fi
 
-if ! pip >/dev/null 2>&1; then
-   echo "
-You need a working 'pip' command. To get one:
+# Some systems have a pip2 but no pip.
+PIP="pip"
 
-On Ubuntu and WSL:
+if ! "$PIP" --version >/dev/null 2>&1; then
+    echo "could not find pip, trying pip2"
+    PIP="pip2"
+fi
+
+# Hopefully $PIP should be pointing at an appropriate executable name.
+# We just checked if the pip command is broken; let's see if it
+# points to the wrong spot.
+if "$PIP" --version 2>/dev/null | grep -q 'python 3'; then
+    echo "
+
+On your system, 'pip' appears to invoke Python 3's pip. This might cause problems.
+This script will try switching to 'pip2', but your pip2 install might be broken too.
+
+"
+    PIP="pip2"
+fi
+
+if ! "$PIP" --version >/dev/null 2>&1; then
+   echo "
+You need a working pip command. To get one:
+
+On Debian, Ubuntu, and WSL:
    $sudo_command apt-get install python-pip
 
 On macOS:
@@ -85,14 +108,7 @@ hard_detect_dpkg () {
 }
 
 check_deb_dependencies () {
-    critical="$(cat <<EOF
-build-essential
-libffi-dev
-python-dev
-python-pip
-EOF
-)"
-
+    critical="$(cat ./util/dependencies.txt)"
     packages_not_found=""
     for pkg in $critical; do
 	if ! hard_detect_dpkg "$pkg"; then
@@ -133,23 +149,61 @@ die () {
     exit 1
 }
 
+# We want to run some tests on the parent of the path on the command
+# line.
+parent_dirname="$(dirname "$1")"
+
+if [ ! -d "$parent_dirname" ]; then
+    die "
+The parent directory of $1 ($parent_dirname) does not exist. Please specify a
+parent directory you can write to. $HOME/streisand-deps
+may be a good choice.
+
+"
+fi
+
+if [ ! -w "$parent_dirname" ]; then
+    die "
+The parent directory of $1 ($parent_dirname) is not writable. Please specify a
+parent directory you can write to. $HOME/streisand-deps
+may be a good choice.
+
+"
+fi
+
+if [ -e "$1" ]; then
+    die "
+$1 already exists. Please specify a place for a
+new directory to be created. $HOME/streisand-deps
+is a good choice if it doesn't exist.
+
+"
+fi
+
 sudo_pip () {
     # pip complains loudly about directory permissions when sudo without -H.
-    $sudo_for_pip_install pip $quiet "$@"
+    $sudo_for_pip_install "$PIP" $quiet "$@"
 }
 
 our_pip () {
-    pip $quiet "$@"
+    "$PIP" $quiet "$@"
 }
 
 our_pip_install () {
     our_pip install "$@"
 }
 
-# An easy way to see if Homebrew is installed.
+NO_SITE_PACKAGES=""
+
+# An easy way to see if Homebrew is installed and vaguely working.
+
 if brew command command >/dev/null 2>&1; then
     # If it is, we get our virtualenv as a regular user
     our_pip_install virtualenv
+    # Homebrew's virtualenv defaults to using site-wide settings.
+    # We don't want this. But --no-site-packages is deprecated, so
+    # we should only set it for Homebrew.
+    NO_SITE_PACKAGES="--no-site-packages"
 else
     # We may not need this installed as root; we just need it on
     # $PATH somewhere. But do root for now.
@@ -159,11 +213,17 @@ fi
 # In case we have a new virtualenv executable.
 hash -r
 
-if ! virtualenv "$1"; then
-    dn="$(dirname "$1")"
+if ! virtualenv --python=python2 $NO_SITE_PACKAGES "$1"; then
+    parent_dirname="$(dirname "$1")"
     echo "
-virtualenv failed to create directory '$1'. Note that $1 must not exist, but
-its parent ($dn) must exist.
+virtualenv failed to create directory '$1'
+using 'virtualenv --python=python2 $1'. Note that $1 must not exist, but
+its parent ($parent_dirname) must exist.
+
+The first argument, 'new-directory', must be somewhere you can write
+to. A good place may be $HOME/streisand-deps. If it already exists,
+please delete the directory, or use a different name.
+
 "
     exit 1
 fi
@@ -178,7 +238,7 @@ source "$1/bin/activate"
 
 # Below this line, we are only installing into the virtualenv at "$1"
 
-our_pip_install --upgrade pip 
+our_pip_install --upgrade pip
 
 # The pip we want should be in our path now. Make sure we use it.
 hash -r

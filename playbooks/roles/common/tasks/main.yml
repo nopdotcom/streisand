@@ -38,9 +38,23 @@
     mode: 0644
 
 - name: Generate random VPN client names
-  shell: grep -v -P "[\x80-\xFF]" /usr/share/dict/english.txt | sed -e "s/'//" | shuf -n 2 | xargs | sed -e 's/ /./g'
+  shell: "{{ streisand_word_gen.identifier }}"
   register: "vpn_client_names"
   with_sequence: count={{ vpn_clients }}
+
+- name: Ensure the Streisand gateway directory exists
+  file:
+    path: "{{ streisand_gateway_location }}"
+    owner: www-data
+    group: www-data
+    mode: 0750
+    state: directory
+
+- name: Output the random VPN client names to disk for integration tests
+  template:
+    src: "test-client-inventory.j2"
+    dest: "{{ streisand_gateway_location }}/test-client-inventory"
+  when: streisand_client_test
 
 - name: Copy the HTML header and footer templates that are used during documentation generation
   copy:
