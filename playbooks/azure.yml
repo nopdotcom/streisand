@@ -117,7 +117,7 @@
       prompt: "\nEnsure that you have the azure credentials file: ~/.azure/credentials \nDetails on generating this can be found at https://github.com/StreisandEffect/streisand/blob/master/documentation/AZURE.md"
 
     - name: "confirmation"
-      prompt: "\nStreisand will now set up your server: This process usually takes around ten minutes: Press Enter to begin setup...\n"
+      prompt: "\nStreisand will now set up your server: This process usually takes around 25 minutes: Press Enter to begin setup...\n"
 
   pre_tasks:
     - name: Set the Azure Region fact

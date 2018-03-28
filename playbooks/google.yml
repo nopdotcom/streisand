@@ -119,7 +119,7 @@
       private: no
 
     - name: "confirmation"
-      prompt: "\nStreisand will now set up your server. This process usually takes around ten minutes. Press Enter to begin setup...\n"
+      prompt: "\nStreisand will now set up your server. This process usually takes around 25 minutes. Press Enter to begin setup...\n"
 
   pre_tasks:
     - name: Set the Google Compute Engine Zone fact
