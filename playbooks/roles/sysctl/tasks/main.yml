@@ -9,4 +9,3 @@
         reload: yes
         state: present
       with_items: "{{ sysctl_values }}"
-  when: ansible_virtualization_type != 'lxc'

@@ -3,7 +3,6 @@
   sysctl:
     name: net.ipv4.ip_forward
     value: 1
-  when: ansible_virtualization_type != 'lxc'
 
 - name: "Add IPv4 traffic forwarding persistence service to init"
   copy:
