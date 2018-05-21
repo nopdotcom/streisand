@@ -16,23 +16,21 @@ quiet=
 
 usage () {
        echo "
-Usage: $0 new-directory
+Usage: $0 ./venv
 
-This script installs Streisand builder dependencies into an isolated
-Python virtualenv. A virtualenv is one of the most reliable ways of
-avoiding version clashes, and is especially recommended for people
-having problems with initial Streisand installs.
+This script creates an isolated Python virtualenv at './venv', and
+installs Ansible and dependencies into it.
 
-It depends on Python 2.7, and on a pip command functional enough to
-install virtualenv.  If this is a system running Debian or Ubuntu,
-this script will also check for other packages needed to install.
+The script depends on Python 2.7, and on a functional 'pip' command.
+This script can install 'virtualenv' for you, but this may require
+sudo/root access.
 
-This script can install virtualenv for you, but on Linux, this
-requires sudo/root access.
+If this system is running Debian or Ubuntu, this script will also
+check for other packages needed to install.
 
-'new-directory' must be somewhere you can write to. A good place is
-'./venv'. If it already exists, please delete the directory, or use
-a different name.
+Although './venv' is recommended, you can specify another location to
+create the virtualenv. If the location already exists, it should be an
+existing virtualenv to overwrite.
 
 "
 }

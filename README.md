@@ -111,9 +111,9 @@ Complete all of these tasks on your local home machine.
   * On Debian and Ubuntu
 
         sudo apt-get install git python-pip
-  * On Fedora
+  * On Fedora 27, some additional packages are needed later.
 
-        sudo yum install git python-pip
+		sudo yum install git python2-pip gcc python2-devel python2-crypto python2-pycurl libcurl-devel
   * On macOS, `git` is part of the Developer Tools, and it will be installed the first time you run it. If there isn't already a `pip` command installed, install it with:
 
         sudo python2.7 -m ensurepip
