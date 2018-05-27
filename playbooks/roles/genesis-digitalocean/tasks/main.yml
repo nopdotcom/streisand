@@ -32,6 +32,7 @@
         size_id: "{{ do_small_droplet_size_id }}"
         region_id: "{{ regions[do_region] }}"
         image_id: "{{ do_ubuntu_x64_image_id }}"
+        ipv6: yes
         unique_name: yes
         wait: yes
         api_token: "{{ do_access_token }}"
