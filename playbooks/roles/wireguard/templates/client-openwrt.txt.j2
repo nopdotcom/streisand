@@ -1,0 +1,92 @@
+### START-WIREGUARD
+
+# This OpenWrt (LEDE) script sets up a WireGuard interface to point to
+# a Streisand server as a primary VPN. The interface is added to the
+# "WAN" firewall group. (If the interface already exists, this script
+# doesn't do anything.)
+
+# Use this script if you're on the same network as the router you're
+# configuring.
+
+### NOTE NOTE NOTE NOTE ###
+
+# This script does not change your system-wide DNS resolver. The
+# standard Streisand resolver is available at {{ dnsmasq_wireguard_ip }},
+# and you'll need to point "Network:DNS:DNS Forwardings" at it
+# yourself, as well as selecting "Ignore resolve file" on the "Resolv"
+# page.
+
+# Cut&paste this whole file into the LuCI "System:Startup:Local
+# Startup" box; rebooting the router will then run it. This code will
+# erase itself after executing.
+
+# If you're *not* running this script from the "Local Startup" box,
+# delete or comment out the next line.
+
+trap self_cleanup 0
+
+# You don't need to change anything else.
+
+# Make errors fatal.
+set -e
+
+wireguard_completed="# Wireguard setup did not complete."
+
+self_cleanup () {
+    sed -i.bak -e '/^### START-WIREGUARD/,/^### END-WIREGUARD/ d' \
+               -e "\$ a $wireguard_completed" \
+        /etc/rc.local
+}
+
+move_to_firewall_group () {
+    ifname="$1"
+    fwgroup="$2"
+    for i in $(seq 0 20); do
+	name=$(uci get "firewall.@zone[$i].name" 2>/dev/null) || return
+	networks=$(uci get firewall.@zone[$i].network)
+	if echo "$networks" | grep -E -q "\\b${ifname}\\b"; then
+	    networks=$(echo "$networks" | sed "s/\\b${ifname}\\b *//")
+	fi
+	if [ "$name" = "$fwgroup" ]; then
+	    networks="$networks $ifname"
+	fi
+	uci set firewall.@zone[$i].network="$networks"
+    done
+}
+
+ifname="{{ item[0].stdout | replace("-", "_") }}"
+
+if ! uci get network.$ifname >/dev/null 2>&1; then
+    # Clean out peers
+    uci delete network.@wireguard_$ifname[0] >/dev/null 2>&1 || true
+    uci batch <<EOF
+
+
+set network.$ifname=interface
+set network.$ifname.proto='wireguard'
+set network.$ifname.private_key='{{ item[1].stdout }}'
+set network.$ifname.addresses='10.192.122.{{ (item[0].item|int) + 1 }}/32'
+set network.$ifname.listen_port='51820'
+
+add network wireguard_$ifname
+
+set network.@wireguard_$ifname[-1].public_key='{{ wireguard_server_public_key }}'
+add_list network.@wireguard_$ifname[-1].allowed_ips='0.0.0.0/0'
+set network.@wireguard_$ifname[-1].route_allowed_ips='1'
+set network.@wireguard_$ifname[-1].endpoint_host='{{ streisand_ipv4_address }}'
+set network.@wireguard_$ifname[-1].persistent_keepalive='25'
+set network.@wireguard_$ifname[-1].endpoint_port='{{ wireguard_port }}'
+
+
+EOF
+    move_to_firewall_group $ifname wan || true # FIXME
+    uci commit
+    # This is definitely necessary.
+    /etc/init.d/network restart
+fi
+
+wireguard_completed="# Wireguard interface configured successfully"
+
+### END-WIREGUARD
+#
+# Status
