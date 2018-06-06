@@ -1,31 +1,35 @@
 ### START-WIREGUARD
 
-# This OpenWrt (LEDE) script sets up a WireGuard interface to point to
-# a Streisand server as a primary VPN. The interface is added to the
-# "WAN" firewall group. (If the interface already exists, this script
-# doesn't do anything.)
+# This OpenWrt (LEDE) /etc/rc.local script sets up the WireGuard profile
+# "{{ item[0].stdout }}" from the "{{ streisand_server_name }}" Streisand server.
 
-# Use this script if you're on the same network as the router you're
-# configuring.
+# Note that this script will replace the router's Internet access;
+# only run it when you're connected to the LAN/WiFi connection.
 
-### NOTE NOTE NOTE NOTE ###
+# Open the LuCI web admin interface to the "System:Startup" page.
+# Paste this whole file into the "Local Startup" box. During the next
+# reboot, the script will run, and erase itself. It will leave a
+# success/failure message in the "Local Startup" box.
 
-# This script does not change your system-wide DNS resolver. The
-# standard Streisand resolver is available at {{ dnsmasq_wireguard_ip }},
-# and you'll need to point "Network:DNS:DNS Forwardings" at it
-# yourself, as well as selecting "Ignore resolve file" on the "Resolv"
-# page.
+# If you're using the web admin UI, you need the "luci-app-wireguard"
+# and "luci-proto-wireguard" packages installed.
 
-# Cut&paste this whole file into the LuCI "System:Startup:Local
-# Startup" box; rebooting the router will then run it. This code will
-# erase itself after executing.
+# LuCI instructions end here.
 
-# If you're *not* running this script from the "Local Startup" box,
-# delete or comment out the next line.
+############
+
+# If aren't using LuCI, you need the "kmod-wireguard" and
+# "wireguard-tools" packages. You may need to reboot after running
+# this script (just restarting /etc/init.d/network may not be enough.)
+
+# Commenting out the next line will stop this script from messing
+# around with /etc/rc.local.
 
 trap self_cleanup 0
 
-# You don't need to change anything else.
+# Instructions end here.
+
+################################################################
 
 # Make errors fatal.
 set -e
@@ -38,50 +42,70 @@ self_cleanup () {
         /etc/rc.local
 }
 
-move_to_firewall_group () {
+. /lib/functions.sh
+
+# This should be rewritten in terms of /lib/functions.sh callbacks.
+move_to_firewall_zone () {
     ifname="$1"
-    fwgroup="$2"
+    fwzone="$2"
     for i in $(seq 0 20); do
+	# No more zones?
 	name=$(uci get "firewall.@zone[$i].name" 2>/dev/null) || return
-	networks=$(uci get firewall.@zone[$i].network)
-	if echo "$networks" | grep -E -q "\\b${ifname}\\b"; then
-	    networks=$(echo "$networks" | sed "s/\\b${ifname}\\b *//")
+	networks=$(uci get "firewall.@zone[$i].network")
+	if list_contains networks "$ifname"; then
+	    # Shell programmer wanted.
+	    networks=$(echo "$networks" | sed "s/ *\\b${ifname}\\b *//")
 	fi
-	if [ "$name" = "$fwgroup" ]; then
-	    networks="$networks $ifname"
+	if [ "$name" = "$fwzone" ]; then
+	    append networks "$ifname"
 	fi
-	uci set firewall.@zone[$i].network="$networks"
+	uci set "firewall.@zone[$i].network=$networks"
     done
 }
 
 ifname="{{ item[0].stdout | replace("-", "_") }}"
 
-if ! uci get network.$ifname >/dev/null 2>&1; then
-    # Clean out peers
-    uci delete network.@wireguard_$ifname[0] >/dev/null 2>&1 || true
+if ! uci get "network.$ifname" >/dev/null 2>&1; then
+    # Clean out any old peers
+    uci delete "network.@wireguard_$ifname[0]" >/dev/null 2>&1 || true
+
     uci batch <<EOF
 
 
+# The local interface
 set network.$ifname=interface
+
 set network.$ifname.proto='wireguard'
 set network.$ifname.private_key='{{ item[1].stdout }}'
 set network.$ifname.addresses='10.192.122.{{ (item[0].item|int) + 1 }}/32'
 set network.$ifname.listen_port='51820'
 
+# The remote peer, i.e., the Streisand server
 add network wireguard_$ifname
 
 set network.@wireguard_$ifname[-1].public_key='{{ wireguard_server_public_key }}'
+set network.@wireguard_$ifname[-1].endpoint_host='{{ streisand_ipv4_address }}'
+set network.@wireguard_$ifname[-1].endpoint_port='{{ wireguard_port }}'
+
+# Route *everything* through this peer.
 add_list network.@wireguard_$ifname[-1].allowed_ips='0.0.0.0/0'
 set network.@wireguard_$ifname[-1].route_allowed_ips='1'
-set network.@wireguard_$ifname[-1].endpoint_host='{{ streisand_ipv4_address }}'
+
+# It is much more painful to debug when this is needed but missing.
 set network.@wireguard_$ifname[-1].persistent_keepalive='25'
-set network.@wireguard_$ifname[-1].endpoint_port='{{ wireguard_port }}'
 
 
 EOF
-    move_to_firewall_group $ifname wan || true # FIXME
+
+    move_to_firewall_zone "$ifname" wan || true # FIXME
+
+    # Set the system-wide DNS
+    uci delete dhcp.@dnsmasq[0].server || true
+    uci add_list dhcp.@dnsmasq[0].server=10.192.122.1
+    uci set dhcp.@dnsmasq[0].noresolv=1
+
     uci commit
-    # This is definitely necessary.
+    # This seems necessary, and a full reboot may be as well.
     /etc/init.d/network restart
 fi
 
