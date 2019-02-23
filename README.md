@@ -23,7 +23,7 @@ If you have an account with a cloud computing provider, Streisand can set up a n
 Here's what **[a sample Streisand server](http://streisandeffect-demo.s3-website.us-east-2.amazonaws.com/)** looks like.
 
 
-There's a list of supported cloud providers; experts may be able to use Streisand to install on many other cloud providers.
+There's a [list of supported cloud providers](#cloud-providers); experts may be able to use Streisand to install on many other cloud providers.
 
 ## VPN services
 
@@ -45,8 +45,11 @@ Some Streisand services include add-ons for further censorship and throttling re
     * [Obfsproxy](https://www.torproject.org/projects/obfsproxy.html.en) with obfs4 available as an add-on.
 * [WireGuard](https://www.wireguard.com/), a modern high-performance protocol.
 
-You can look at a [full features](Features.md) or [services](Services.md) list.
+See also:
+* A [more technical list of features](Features.md) 
+* A [more technical list of services](Services.md)
 
+<a id="cloud-providers"></a>
 ## Cloud providers
 * Amazon Web Services (AWS)
 * Microsoft Azure
@@ -55,18 +58,22 @@ You can look at a [full features](Features.md) or [services](Services.md) list.
 * Linode
 * Rackspace
 
+
+#### Other providers
 If you are an expert and can set up a *fresh Ubuntu 16.04 server* elsewhere, Streisand includes code for:
 
 * Using `ssh` to connect to your remote server from your local machine
 * After connecting to your remote server, you can run Streisand *in place*, called "localhost deployment". This converts the server to a Streisand node.
 
-"Localhost deployment" often works better than `ssh` deployment.
+"Localhost deployment" often works better than `ssh` deployment. 
+
+For more information, see [the advanced installation instructions](Advanced installation.md).
 
 ## Installation
 
 You need command-line access to a Unix system. You can use Linux, BSD, or macOS; on Windows 10, the Windows Subsystem for Linux (WSL) counts as Linux. 
 
-Once you're ready, see the [full installation instructions](Installation).
+Once you're ready, see the [full installation instructions](Installation.md).
 
 
 Upcoming Features

@@ -2,14 +2,14 @@
 ------------
 Please read all installation instructions **carefully** before proceeding.
 
-If you're an expert, and installing on a cloud provider Streisand doesn't support, make sure to read [the advanced installation instructions](Advanced installation.md).
+If you're an expert, and installing on a cloud provider Streisand doesn't support, make sure to read [the advanced installation instructions](Advanced%20installation.md).
 
 ### Important Clarification ###
 Streisand is based on [Ansible](https://www.ansible.com/), an automation tool that is typically used to provision and configure files and packages on remote servers. Streisand automatically sets up **another server** with the VPN packages and configuration. We call the machine that sets up the Streisand server the *builder*. Think of the builder as "a place to stand."
 
 (If you don't have a suitable builder machine, you could set up another cloud server to use as your builder. That means you'd have two cloud servers at the end — the builder, and your fresh new Streisand *server*.  After downloading the *builder's* `streisand` directory — very important to keep the contents of that directory! — you could delete the builder cloud server.)
 
-Although it's not recommended, sometimes you can use a fresh server as both the builder and the server. See the [the advanced installation instructions](Advanced installation.md).
+Although it's not recommended, sometimes you can use a fresh server as both the builder and the server. See the [the advanced installation instructions](Advanced%20installation.md).
 
 ### Prerequisites ###
 Complete all of these tasks on your local home machine.
