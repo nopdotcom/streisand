@@ -67,7 +67,7 @@ If you are an expert and can set up a *fresh Ubuntu 16.04 server* elsewhere, Str
 
 "Localhost deployment" often works better than `ssh` deployment. 
 
-For more information, see [the advanced installation instructions](Advanced installation.md).
+For more information, see [the advanced installation instructions](Advanced%20installation.md).
 
 ## Installation
 
