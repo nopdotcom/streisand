@@ -76,13 +76,12 @@
         line: "vpn_clients: {{ vpn_clients }}"
     - lineinfile:
         path: "{{ streisand_site_vars }}"
-<<<<<<< HEAD
         regexp: "^streisand_ipv6_enabled: (?:yes|no)$"
         line: "streisand_ipv6_enabled: {{ streisand_ipv6_enabled }}"
-=======
+    - lineinfile:
+        path: "{{ streisand_site_vars }}"
         regexp: "^streisand_ad_blocking_enabled: (?:yes|no)$"
         line: "streisand_ad_blocking_enabled: {{ streisand_ad_blocking_enabled }}"
->>>>>>> ad-blocking
     - lineinfile:
         path: "{{ streisand_site_vars }}"
         regexp: "^streisand_openconnect_enabled: (?:yes|no)$"
