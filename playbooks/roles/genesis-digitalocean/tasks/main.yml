@@ -35,6 +35,7 @@
         wait: yes
         oauth_token: "{{ do_access_token }}"
         state: present
+        ipv6: "{{ streisand_ipv6_enabled }}"
       register: streisand_server
   rescue:
     - fail:
